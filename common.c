@@ -6,9 +6,15 @@
 
 #include "common.h"
 
-int addrparse(const char *addrstr, const char *portstr,
-              struct sockaddr_storage *storage) if (addrstr == NULL || portstr == NULL)
+void logexit(const char *msg)
 {
+    perror(msg);
+    exit(EXIT_FAILURE);
+}
+
+int addrparse(const char *addrstr, const char *portstr, struct sockaddr_storage *storage)
+{
+    if (addrstr == NULL || portstr == NULL)
     {
         return -1;
     }
@@ -32,9 +38,9 @@ int addrparse(const char *addrstr, const char *portstr,
     struct in6_addr inaddr6;
     if (inet_pton(AF_INET6, addrstr, &inaddr6))
     {
-        struct sockaddr_in *addr6 = (struct sockaddr_in6 *)storage;
-        addr6->sin_family = AF_INET6;
-        addr6->sin_port = port;
+        struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)storage;
+        addr6->sin6_family = AF_INET6;
+        addr6->sin6_port = port;
         addr6->sin_addr = inaddr6;
         memcpy(&(addr6->sin6_addr), inaddr6, sizeof(inaddr6));
         return 0;
@@ -46,14 +52,14 @@ int addrparse(const char *addrstr, const char *portstr,
 void addrtostr(const struct sockaddr *addr, char *str, size_t strsize)
 {
     int version;
-    char addrstr[INET6_ADDRSTRLEN + 1] - **;
+    char addrstr[INET6_ADDRSTRLEN + 1];
     uint16_t port;
 
     if (addr->sa_family == AF_INET)
     {
         version = 4;
         struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
-        if (inet_ntop(AF_INET, &(addr4->sin_addr), addrstr, INET6_ADRRSTRLEN + 1))
+        if (inet_ntop(AF_INET, &(addr4->sin_addr), addrstr, INET_ADDRSTRLEN) == NULL)
         {
             logexit("ntop");
         }
@@ -62,8 +68,8 @@ void addrtostr(const struct sockaddr *addr, char *str, size_t strsize)
     else if (addr->sa_family == AF_INET6)
     {
         version = 6;
-        struct sockaddr_in *addr6 = (struct sockaddr_in6 *)addr;
-        if (inet_ntop(AF_INET, &(addr6->sin6_addr), addrstr, INET6_ADDRSTRLEN + 1))
+        struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
+        if (inet_ntop(AF_INET6, &(addr6->sin6_addr), addrstr, INET6_ADDRSTRLEN) == NULL)
         {
             logexit("ntop");
         }
@@ -71,7 +77,7 @@ void addrtostr(const struct sockaddr *addr, char *str, size_t strsize)
     }
     else
     {
-        logexit("unknown protocol family")
+        logexit("unknown protocol family");
     }
     if (str)
     {

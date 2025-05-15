@@ -1,3 +1,6 @@
+#include "protocol.h"
+#include "common.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,14 +11,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "common.h"
 
 #define MSG_SIZE 1024
 #define SERVER_PORT 51511
 
 void usage(int argc, char **argv)
 {
-    fprintf(stderr, "Usage: %s <server_ip> <server_port>\n");
+    fprintf(stderr, "Usage: %s <server_ip> <server_port>\n", argv[0]);
     exit(EXIT_FAILURE);
 }
 
@@ -31,14 +33,7 @@ int main(int argc, char **argv)
 {
     if (argc < 3)
     {
-        usage();
-    }
-
-    int s;
-    s = socket(storage->ss_family, SOCK_STREAM, 0);
-    if (s == -1)
-    {
-        logexit("socket");
+        usage(argc, argv);
     }
 
     struct sockaddr_storage storage;
@@ -46,6 +41,13 @@ int main(int argc, char **argv)
     {
         usage(argc, argv);
     }
+    int s;
+    s = socket(storage.ss_family, SOCK_STREAM, 0);
+    if (s == -1)
+    {
+        logexit("socket");
+    }
+
     struct sockaddr *addr = (struct sockaddr *)(&storage);
     if (0 != connect(s, addr, sizeof(storage)))
     {

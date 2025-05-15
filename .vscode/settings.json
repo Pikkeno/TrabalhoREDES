@@ -59,6 +59,8 @@
   "files.associations": {
     "types.h": "c",
     "winsock.h": "c",
-    "common.h": "c"
+    "common.h": "c",
+    "stdio.h": "c",
+    "stdlib.h": "c"
   }
 }

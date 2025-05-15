@@ -1,23 +1,30 @@
+#include "protocol.h"
+#include "common.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <sys/types.h>
-#include <sys/socket.h
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#include "common.h"
-
 
 #define BUFFER_SIZE 1024
+
+void logexit(const char *msg)
+{
+    perror(msg);
+    exit(EXIT_FAILURE);
+}
 
 void usage(int argc, char **argv)
 {
     printf("Usage: %s <v4|v6> <server_port>\n", argv[0]);
-    printf("example: %s v4 51511\n");
+    printf("example: %s v4 51511\n", argv[0]);
     exit(EXIT_FAILURE);
 }
 
@@ -53,14 +60,16 @@ int main(int argc, char **argv)
     }
 
     char addrstr[BUFFER_SIZE];
-    addrtostr(addr, addrstr, BUFFER_SIZE);
+    addrtostr(caddr, addrstr, BUFFER_SIZE);
     printf("bound to %s, waiting for connections...\n", addrstr);
 
     while (1)
     {
-        struct sockaddr_storage cstorage struct sockaddr *caddr = (struct sockaddr *)(&cstorage);
+        struct sockaddr_storage cstorage;
+        struct sockaddr *caddr = (struct sockaddr *)(&cstorage);
 
-        int csock = accept(s, caddr, sizeof(cstorage));
+        socklen_t caddrlen = sizeof(cstorage);
+        int csock = accept(s, caddr, &caddrlen););
         if (csock == -1)
         {
             logexit("accept");
@@ -83,3 +92,4 @@ int main(int argc, char **argv)
         }
         close(csock);
     }
+}
