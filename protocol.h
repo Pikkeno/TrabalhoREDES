@@ -1,9 +1,7 @@
-#pragma once
-
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
-#define MSG_SIZE 1024
+#define MSG_SIZE 256
 
 typedef enum {
     MSG_REQUEST,
@@ -20,9 +18,12 @@ typedef struct {
     int client_action;
     int server_action;
     int result;
-    int client_win;
-    int server_win;
-    char msg[MSG_SIZE];
+    int client_wins;
+    int server_wins;
+    char message[MSG_SIZE];
 } GameMessage;
+
+void init_game_message(GameMessage *msg);
+void print_game_message(const GameMessage *msg);
 
 #endif

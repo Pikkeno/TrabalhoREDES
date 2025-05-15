@@ -1,4 +1,4 @@
-$(BIN_DIR)/client: client.c common.c
+$(BIN_DIR)/client: client.c common.c protocol.c
 	...
-$(BIN_DIR)/server: server.c common.c
+$(BIN_DIR)/server: server.c common.c protocol.c
 	...
