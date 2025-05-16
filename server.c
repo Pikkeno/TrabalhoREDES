@@ -4,93 +4,135 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <time.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <unistd.h>
-
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-
 #define BUFFER_SIZE 1024
 
-void logexit(const char *msg)
-{
+void logexit(const char *msg) {
     perror(msg);
     exit(EXIT_FAILURE);
 }
 
-void usage(int argc, char **argv)
-{
+void usage(int argc, char **argv) {
     printf("Usage: %s <v4|v6> <server_port>\n", argv[0]);
-    printf("example: %s v4 51511\n", argv[0]);
+    printf("Example: %s v4 51511\n", argv[0]);
     exit(EXIT_FAILURE);
 }
 
-int main(int argc, char **argv)
-{
-    if (argc < 3)
-    {
+int main(int argc, char **argv) {
+    if (argc < 3) {
         usage(argc, argv);
     }
 
     struct sockaddr_storage storage;
-    if (0 != server_sockaddr_init(argv[1], argv[2], &storage))
-    {
+    if (server_sockaddr_init(argv[1], argv[2], &storage) != 0) {
         usage(argc, argv);
     }
 
-    int s;
-    s = socket(storage.ss_family, SOCK_STREAM, 0);
-    if (s == -1)
-    {
-        logexit("socket");
-    }
+    int s = socket(storage.ss_family, SOCK_STREAM, 0);
+    if (s == -1) logexit("socket");
 
     struct sockaddr *addr = (struct sockaddr *)(&storage);
-    if (0 != bind(s, addr, sizeof(storage)))
-    {
-        logexit("bind");
-    }
-
-    if (0 != listen(s, 10))
-    {
-        logexit("listen");
-    }
+    if (bind(s, addr, sizeof(storage)) != 0) logexit("bind");
+    if (listen(s, 10) != 0) logexit("listen");
 
     char addrstr[BUFFER_SIZE];
-    addrtostr(caddr, addrstr, BUFFER_SIZE);
-    printf("bound to %s, waiting for connections...\n", addrstr);
+    addrtostr(addr, addrstr, BUFFER_SIZE);
+    printf("Bound to %s, waiting for connections...\n", addrstr);
 
-    while (1)
-    {
+    srand(time(NULL)); 
+
+    while (1) {
         struct sockaddr_storage cstorage;
         struct sockaddr *caddr = (struct sockaddr *)(&cstorage);
-
         socklen_t caddrlen = sizeof(cstorage);
-        int csock = accept(s, caddr, &caddrlen););
-        if (csock == -1)
-        {
-            logexit("accept");
-        }
+        int csock = accept(s, caddr, &caddrlen);
+        if (csock == -1) logexit("accept");
 
         char caddrstr[BUFFER_SIZE];
-        addrtostr(addr, caddrstr, BUFFER_SIZE);
-        printf("[log] accepted connection from %s\n", caddrstr);
+        addrtostr(caddr, caddrstr, BUFFER_SIZE);
+        printf("[log] Accepted connection from %s\n", caddrstr);
 
-        char buf[BUFFER_SIZE];
-        memset(buf, 0, BUFFER_SIZE);
-        size_t count = recv(csock, buf, BUFFER_SIZE, 0);
-        printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+        int client_wins = 0;
+        int server_wins = 0;
 
-        sprintf(buf, "remote endpoint: %s", caddrstr);
-        send(csock, buf, strlen(buf) + 1, 0);
-        if (count != strlen(buf) + 1)
-        {
-            logexit("send");
+        while (1) {
+            GameMessage msg;
+            init_game_message(&msg);
+
+            msg.type = MSG_REQUEST;
+            send(csock, &msg, sizeof(msg), 0);
+
+            recv(csock, &msg, sizeof(msg), 0);
+            if (msg.type != MSG_RESPONSE || msg.client_action < 0 || msg.client_action > 4) {
+                msg.type = MSG_ERROR;
+                snprintf(msg.message, MSG_SIZE, "Por favor, selecione um valor de 0 a 4.");
+                send(csock, &msg, sizeof(msg), 0);
+                continue;
+            }
+
+            msg.server_action = rand() % 5;
+
+            int tabela[5][5] = {
+                { -1,  0,  1,  1,  0 },
+                {  1, -1,  1,  1,  0 },
+                {  0,  0, -1,  1,  1 },
+                {  0,  0,  0, -1,  1 },
+                {  1,  1,  0,  0, -1 }
+            };
+
+            int ca = msg.client_action;
+            int sa = msg.server_action;
+            msg.result = tabela[ca][sa];
+
+            if (msg.result == 1) client_wins++;
+            else if (msg.result == 0) server_wins++;
+
+            msg.client_wins = client_wins;
+            msg.server_wins = server_wins;
+
+            msg.type = MSG_RESULT;
+            snprintf(msg.message, MSG_SIZE,
+                "Você escolheu %d, servidor escolheu %d. Resultado: %s.",
+                ca, sa,
+                msg.result == 1 ? "Vitória" :
+                msg.result == 0 ? "Derrota" : "Empate"
+            );
+
+            send(csock, &msg, sizeof(msg), 0);
+
+            if (msg.result == -1) continue;
+
+            msg.type = MSG_PLAY_AGAIN_REQUEST;
+            snprintf(msg.message, MSG_SIZE, "Deseja jogar novamente? (1 - Sim, 0 - Não)");
+            send(csock, &msg, sizeof(msg), 0);
+
+            recv(csock, &msg, sizeof(msg), 0);
+            if (msg.type != MSG_PLAY_AGAIN_RESPONSE || (msg.client_action != 0 && msg.client_action != 1)) {
+                msg.type = MSG_ERROR;
+                snprintf(msg.message, MSG_SIZE, "Digite 1 para sim ou 0 para não.");
+                send(csock, &msg, sizeof(msg), 0);
+                continue;
+            }
+
+            if (msg.client_action == 0) {
+                msg.type = MSG_END;
+                snprintf(msg.message, MSG_SIZE,
+                    "Jogo encerrado. Placar final - Cliente: %d, Servidor: %d",
+                    client_wins, server_wins);
+                send(csock, &msg, sizeof(msg), 0);
+                break;
+            }
         }
-        close(csock);
-    }
-}
 
+        close(csock); 
+    }
+
+    close(s); 
+    return 0;
+}
