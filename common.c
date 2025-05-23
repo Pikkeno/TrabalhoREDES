@@ -1,10 +1,11 @@
+#include "common.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
 
 #include <arpa/inet.h>
 
-#include "common.h"
 
 void logexit(const char *msg)
 {

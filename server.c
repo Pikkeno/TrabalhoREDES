@@ -1,9 +1,6 @@
 #include "protocol.h"
 #include "common.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -77,7 +74,9 @@ int main(int argc, char **argv) {
             }
 
             msg.server_action = rand() % 5;
-
+           
+            #tabela para comparar as escolhas feitas entre o client e servidor
+            #solução diferenciada quero me gabar nao
             int tabela[5][5] = {
                 { -1,  0,  1,  1,  0 },
                 {  1, -1,  1,  1,  0 },
@@ -86,6 +85,7 @@ int main(int argc, char **argv) {
                 {  1,  1,  0,  0, -1 }
             };
 
+            
             int ca = msg.client_action;
             int sa = msg.server_action;
             msg.result = tabela[ca][sa];
@@ -109,13 +109,13 @@ int main(int argc, char **argv) {
             if (msg.result == -1) continue;
 
             msg.type = MSG_PLAY_AGAIN_REQUEST;
-            snprintf(msg.message, MSG_SIZE, "Deseja jogar novamente? (1 - Sim, 0 - Não)");
+            snprintf(msg.message, MSG_SIZE, "Deseja jogar novamente? (1 - Sim, 0 - Nao)");
             send(csock, &msg, sizeof(msg), 0);
 
             recv(csock, &msg, sizeof(msg), 0);
             if (msg.type != MSG_PLAY_AGAIN_RESPONSE || (msg.client_action != 0 && msg.client_action != 1)) {
                 msg.type = MSG_ERROR;
-                snprintf(msg.message, MSG_SIZE, "Digite 1 para sim ou 0 para não.");
+                snprintf(msg.message, MSG_SIZE, "Digite 1 para sim ou 0 para nao.");
                 send(csock, &msg, sizeof(msg), 0);
                 continue;
             }

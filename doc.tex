@@ -1,0 +1,94 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{hyperref}
+
+\title{Trabalho Prático 1 - Comunicação Cliente/Servidor com TCP}
+\author{Seu Nome - Matrícula: XXXXXXXX}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{1. Introdução}
+Este trabalho prático consiste na implementação de um jogo multiplayer baseado no conceito de Jokenpô estendido, chamado Jokenboom, utilizando comunicação via sockets TCP. O jogo é implementado na linguagem C, com suporte tanto para IPv4 quanto IPv6, usando a API de sockets POSIX.
+
+\section*{2. Organização do Projeto}
+O projeto está estruturado da seguinte forma:
+\begin{itemize}
+    \item \textbf{client.c} -- responsável pela comunicação com o servidor e interação com o jogador.
+    \item \textbf{server.c} -- gerencia a lógica do jogo, sorteia as jogadas do servidor, avalia os resultados e gerencia o placar.
+    \item \textbf{common.c/h} -- funções utilitárias para manipulação de endereços IP e sockets.
+    \item \textbf{protocol.c/h} -- define a estrutura \texttt{GameMessage} e funções auxiliares para inicialização e depuração.
+    \item \textbf{Makefile} -- compila os binários \texttt{bin/client} e \texttt{bin/server}.
+\end{itemize}
+
+\section*{3. Detalhes da Implementação}
+
+\subsection*{3.1 Estrutura GameMessage}
+A estrutura \texttt{GameMessage} representa as mensagens trocadas entre cliente e servidor. Ela contém campos como tipo da mensagem, jogadas, resultado e placar:
+
+\begin{lstlisting}[language=C, basicstyle=\ttfamily\footnotesize]
+typedef struct {
+    int type;
+    int client_action;
+    int server_action;
+    int result;
+    int client_wins;
+    int server_wins;
+    char message[256];
+} GameMessage;
+\end{lstlisting}
+
+\subsection*{3.2 Lógica do Servidor}
+O servidor aguarda conexões TCP, envia solicitações de jogada ao cliente, recebe respostas e decide o resultado com base em uma matriz de regras:
+
+\begin{lstlisting}[language=C]
+int tabela[5][5] = {
+    { -1, 0, 1, 1, 0 },
+    {  1, -1, 1, 1, 0 },
+    {  0, 0, -1, 1, 1 },
+    {  0, 0, 0, -1, 1 },
+    {  1, 1, 0, 0, -1 }
+};
+\end{lstlisting}
+
+Essa tabela representa o resultado entre cada par de jogadas possíveis.
+
+\subsection*{3.3 Protocolo de Comunicação}
+\begin{enumerate}
+    \item \texttt{MSG\_REQUEST}: servidor solicita jogada ao cliente.
+    \item \texttt{MSG\_RESPONSE}: cliente envia a jogada.
+    \item \texttt{MSG\_RESULT}: servidor envia o resultado da rodada.
+    \item \texttt{MSG\_PLAY\_AGAIN\_REQUEST}: servidor pergunta se o cliente deseja continuar.
+    \item \texttt{MSG\_PLAY\_AGAIN\_RESPONSE}: cliente responde se quer continuar.
+    \item \texttt{MSG\_END}: servidor envia o placar final e encerra a conexão.
+    \item \texttt{MSG\_ERROR}: servidor envia mensagem de erro se a entrada do cliente for inválida.
+\end{enumerate}
+
+\section*{4. Compilação e Execução}
+Para compilar o projeto, execute:
+\begin{verbatim}
+make
+\end{verbatim}
+Os binários serão gerados na pasta \texttt{bin/}. Para executar:
+
+Servidor:
+\begin{verbatim}
+./bin/server v4 51511
+\end{verbatim}
+
+Cliente:
+\begin{verbatim}
+./bin/client 127.0.0.1 51511
+\end{verbatim}
+
+\section*{5. Conclusão}
+O projeto permitiu aplicar conceitos fundamentais de redes de computadores, como comunicação via sockets TCP, tratamento de mensagens estruturadas, e suporte a múltiplas famílias de protocolo IP. A modularização do código facilitou a manutenção e a clareza na implementação.
+
+\end{document}

@@ -65,9 +65,9 @@ int main(int argc, char **argv) {
                 printf("\nEscolha sua jogada:\n");
                 printf("0 - Nuclear\n");
                 printf("1 - Internet\n");
-                printf("2 - Cibernético\n");
+                printf("2 - Cibernetico\n");
                 printf("3 - Drones\n");
-                printf("4 - Biológico\n");
+                printf("4 - Biologico\n");
                 printf("Digite sua escolha: ");
                 int escolha;
                 scanf("%d", &escolha);
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
             case MSG_PLAY_AGAIN_REQUEST:
                 printf("\n%s\n", msg.message);
                 int resposta;
-                printf("Digite 1 para sim ou 0 para não: ");
+                printf("Digite 1 para sim ou 0 para nao: ");
                 scanf("%d", &resposta);
                 while (getchar() != '\n');
 
