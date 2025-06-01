@@ -7,13 +7,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <stdio.h>
+#include <string.h>
 
 #define BUFFER_SIZE 1024
-
-void logexit(const char *msg) {
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
 
 void usage(int argc, char **argv) {
     printf("Usage: %s <v4|v6> <server_port>\n", argv[0]);
@@ -75,8 +72,7 @@ int main(int argc, char **argv) {
 
             msg.server_action = rand() % 5;
            
-            #tabela para comparar as escolhas feitas entre o client e servidor
-            #solução diferenciada quero me gabar nao
+            
             int tabela[5][5] = {
                 { -1,  0,  1,  1,  0 },
                 {  1, -1,  1,  1,  0 },

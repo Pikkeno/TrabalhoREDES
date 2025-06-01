@@ -17,11 +17,6 @@ void usage(void) {
     exit(EXIT_FAILURE);
 }
 
-void logexit(const char *msg) {
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
-
 int main(int argc, char **argv) {
     if (argc != 3) {
         usage();

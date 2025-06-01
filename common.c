@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include <arpa/inet.h>
 
@@ -42,7 +43,7 @@ int addrparse(const char *addrstr, const char *portstr, struct sockaddr_storage 
         struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)storage;
         addr6->sin6_family = AF_INET6;
         addr6->sin6_port = port;
-        addr6->sin_addr = inaddr6;
+        addr6->sin6_addr = inaddr6;
         memcpy(&(addr6->sin6_addr), &inaddr6, sizeof(inaddr6));
         return 0;
     }
